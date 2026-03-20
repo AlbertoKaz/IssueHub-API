@@ -12,6 +12,8 @@ class TicketController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Ticket::class);
+
         $tickets = Ticket::query()
             ->with('user')
             ->where('user_id', $request->user()->id)
@@ -23,6 +25,8 @@ class TicketController extends Controller
 
     public function store(StoreTicketRequest $request)
     {
+        $this->authorize('create', Ticket::class);
+
         $ticket = Ticket::create([
             'user_id' => $request->user()->id,
             'title' => $request->validated('title'),
@@ -40,7 +44,7 @@ class TicketController extends Controller
 
     public function show(Request $request, Ticket $ticket)
     {
-        abort_unless($ticket->user_id === $request->user()->id, 403);
+        $this->authorize('view', $ticket);
 
         $ticket->load('user');
 
@@ -49,7 +53,7 @@ class TicketController extends Controller
 
     public function update(Request $request, Ticket $ticket)
     {
-        abort_unless($ticket->user_id === $request->user()->id, 403);
+        $this->authorize('update', $ticket);
 
         $validated = $request->validate([
             'title' => ['sometimes', 'string', 'max:255'],
@@ -66,7 +70,7 @@ class TicketController extends Controller
 
     public function destroy(Request $request, Ticket $ticket)
     {
-        abort_unless($ticket->user_id === $request->user()->id, 403);
+        $this->authorize('delete', $ticket);
 
         $ticket->delete();
 
