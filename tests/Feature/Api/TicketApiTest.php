@@ -72,3 +72,71 @@ it('lists only tickets belonging to the authenticated user', function () {
     $response->assertOk()
         ->assertJsonCount(2, 'data');
 });
+
+it('shows a ticket owned by the authenticated user', function () {
+    $user = User::factory()->create();
+    $ticket = Ticket::factory()->create([
+        'user_id' => $user->id,
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson("/api/tickets/{$ticket->id}");
+
+    $response->assertOk()
+        ->assertJsonPath('data.id', $ticket->id);
+});
+
+it('forbids viewing another users ticket', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $ticket = Ticket::factory()->create([
+        'user_id' => $otherUser->id,
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson("/api/tickets/{$ticket->id}");
+
+    $response->assertForbidden();
+});
+
+it('updates a ticket owned by the authenticated user', function () {
+    $user = User::factory()->create();
+
+    $ticket = Ticket::factory()->create([
+        'user_id' => $user->id,
+        'status' => 'open',
+        'priority' => 'medium',
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->patchJson("/api/tickets/{$ticket->id}", [
+        'status' => 'in_progress',
+        'priority' => 'high',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('data.status', 'in_progress')
+        ->assertJsonPath('data.priority', 'high');
+});
+
+it('deletes a ticket owned by the authenticated user', function () {
+    $user = User::factory()->create();
+
+    $ticket = Ticket::factory()->create([
+        'user_id' => $user->id,
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->deleteJson("/api/tickets/{$ticket->id}");
+
+    $response->assertOk();
+
+    $this->assertDatabaseMissing('tickets', [
+        'id' => $ticket->id,
+    ]);
+});
