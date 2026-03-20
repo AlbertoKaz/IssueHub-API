@@ -18,6 +18,15 @@ class TicketController extends Controller
         $tickets = Ticket::query()
             ->with('user')
             ->where('user_id', $request->user()->id)
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->when($request->filled('priority'), function ($query) use ($request) {
+                $query->where('priority', $request->priority);
+            })
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $query->where('title', 'like', '%' . $request->search . '%');
+            })
             ->latest()
             ->paginate(10);
 

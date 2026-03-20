@@ -140,3 +140,73 @@ it('deletes a ticket owned by the authenticated user', function () {
         'id' => $ticket->id,
     ]);
 });
+
+it('filters tickets by status', function () {
+    $user = User::factory()->create();
+
+    Ticket::factory()->create([
+        'user_id' => $user->id,
+        'status' => 'open',
+        'title' => 'Open ticket',
+    ]);
+
+    Ticket::factory()->create([
+        'user_id' => $user->id,
+        'status' => 'closed',
+        'title' => 'Closed ticket',
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson('/api/tickets?status=open');
+
+    $response->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.status', 'open');
+});
+
+it('filters tickets by priority', function () {
+    $user = User::factory()->create();
+
+    Ticket::factory()->create([
+        'user_id' => $user->id,
+        'priority' => 'high',
+        'title' => 'High priority ticket',
+    ]);
+
+    Ticket::factory()->create([
+        'user_id' => $user->id,
+        'priority' => 'low',
+        'title' => 'Low priority ticket',
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson('/api/tickets?priority=high');
+
+    $response->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.priority', 'high');
+});
+
+it('filters tickets by search term in title', function () {
+    $user = User::factory()->create();
+
+    Ticket::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Login error on dashboard',
+    ]);
+
+    Ticket::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Payment gateway timeout',
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson('/api/tickets?search=login');
+
+    $response->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.title', 'Login error on dashboard');
+});
