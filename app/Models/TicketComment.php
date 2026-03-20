@@ -6,25 +6,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Ticket extends Model
+class TicketComment extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'ticket_id',
         'user_id',
-        'title',
-        'description',
-        'status',
-        'priority',
+        'body',
     ];
+
+    public function ticket(): BelongsTo
+    {
+        return $this->belongsTo(Ticket::class);
+    }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function comments()
-    {
-        return $this->hasMany(TicketComment::class);
     }
 }
