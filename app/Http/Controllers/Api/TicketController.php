@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketRequest;
+use App\Http\Requests\UpdateTicketRequest;
 use App\Http\Resources\TicketResource;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
@@ -51,18 +52,11 @@ class TicketController extends Controller
         return new TicketResource($ticket);
     }
 
-    public function update(Request $request, Ticket $ticket)
+    public function update(UpdateTicketRequest $request, Ticket $ticket)
     {
         $this->authorize('update', $ticket);
 
-        $validated = $request->validate([
-            'title' => ['sometimes', 'string', 'max:255'],
-            'description' => ['sometimes', 'string', 'min:10'],
-            'status' => ['sometimes', 'in:open,in_progress,closed'],
-            'priority' => ['sometimes', 'in:low,medium,high'],
-        ]);
-
-        $ticket->update($validated);
+        $ticket->update($request->validated());
         $ticket->load('user');
 
         return new TicketResource($ticket);
